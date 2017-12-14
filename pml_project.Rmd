@@ -1,0 +1,76 @@
+---
+title: "PracticalMachineLearningProject"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+First we load the libraries we'll need, and load in the data
+
+```{r cars}
+set.seed(222)
+library(caret)
+library(ggplot2)
+library(rpart)
+library(randomForest)
+library(corrplot)
+library(readr)
+
+train = read_csv(url("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"))
+test = read_csv(url("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"))
+
+
+```
+
+## Including Plots
+
+First order of business is to remove all of the columns that have no values
+
+```{r pressure, echo=FALSE}
+
+train = train[,colSums(is.na(train)) == 0]
+test = test[,colSums(is.na(test)) == 0]
+
+
+```
+
+Next we partition the data and make a fit using the Rpart method
+
+``` {r}
+inTrain <- createDataPartition(train$classe, p=0.70, list=F)
+trainData <- train[inTrain, ]
+testData <- train[-inTrain, ]
+
+fit = train(classe ~ ., data = trainData, method = 'rpart')
+print(fit, digits = 4)
+
+```
+
+``` {r}
+
+predict_fit = predict(fit, testData)
+confusionMatrix(testData$classe, predict_fit)
+```
+
+We see a slightly lower accuracy rate on the test data (66%), than the training data (74%) which is to be expected
+
+Next we will try Random Forests to see if we can improve our accuracy
+
+``` {r}
+
+fit_rf = train(classe ~ ., data = trainData, method = 'rf', ntree = 10)
+```
+
+
+``` {r}
+predict_fit_rf = predict(fit_rf, testData)
+confusionMatrix(testData$classe, predict_fit_rf)
+```
+
+At 100% Accuracy on the test data, Random Forests represents a huge leap forward.  
+
+Thank you
